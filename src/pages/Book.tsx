@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -7,9 +8,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar, MapPin, Users, Mail, Phone, User } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function Book() {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -22,27 +25,54 @@ export default function Book() {
     specialRequests: "",
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // This will be replaced with actual database integration
-    toast({
-      title: "Booking Request Received!",
-      description: "We'll contact you shortly to confirm your reservation.",
+
+    const { data: { session } } = await supabase.auth.getSession();
+
+    if (!session) {
+      toast({
+        variant: "destructive",
+        title: "Authentication Required",
+        description: "Please sign in to make a booking.",
+      });
+      navigate("/auth");
+      return;
+    }
+
+    const { error } = await supabase.from("bookings").insert({
+      user_id: session.user.id,
+      location: formData.location,
+      accommodation: formData.accommodation,
+      check_in: formData.checkIn,
+      check_out: formData.checkOut,
+      guests: parseInt(formData.guests),
+      special_requests: formData.specialRequests || null,
     });
-    
-    // Reset form
-    setFormData({
-      name: "",
-      email: "",
-      phone: "",
-      location: "",
-      accommodation: "",
-      checkIn: "",
-      checkOut: "",
-      guests: "",
-      specialRequests: "",
-    });
+
+    if (error) {
+      toast({
+        variant: "destructive",
+        title: "Booking Failed",
+        description: error.message,
+      });
+    } else {
+      toast({
+        title: "Booking Request Received!",
+        description: "We'll contact you shortly to confirm your reservation.",
+      });
+      setFormData({
+        name: "",
+        email: "",
+        phone: "",
+        location: "",
+        accommodation: "",
+        checkIn: "",
+        checkOut: "",
+        guests: "",
+        specialRequests: "",
+      });
+    }
   };
 
   const handleChange = (field: string, value: string) => {

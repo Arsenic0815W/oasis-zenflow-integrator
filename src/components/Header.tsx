@@ -45,6 +45,9 @@ export const Header = () => {
             <Button asChild variant="hero" size="lg">
               <Link to="/book">Book Now</Link>
             </Button>
+            <Button asChild variant="outline" size="lg">
+              <Link to="/auth">Sign In</Link>
+            </Button>
           </nav>
 
           {/* Mobile Menu Button */}
@@ -75,6 +78,9 @@ export const Header = () => {
               ))}
               <Button asChild variant="hero" size="lg" className="w-full">
                 <Link to="/book" onClick={() => setIsMenuOpen(false)}>Book Now</Link>
+              </Button>
+              <Button asChild variant="outline" size="lg" className="w-full">
+                <Link to="/auth" onClick={() => setIsMenuOpen(false)}>Sign In</Link>
               </Button>
             </div>
           </nav>
